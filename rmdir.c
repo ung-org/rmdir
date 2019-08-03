@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (optind >= argc) {
+		fprintf(stderr, "rmdir: missing operand\n");
 		return 1;
 	}
 
