@@ -22,45 +22,53 @@
  * SOFTWARE.
  */
 
-#include <stdio.h>
-#include <unistd.h>
+#define _XOPEN_SOURCE 500
+#include <errno.h>
 #include <libgen.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
-const char *rmdir_desc = "remove directories";
-const char *rmdir_inv = "rmdir [-p] dir...";
-
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
-	int c;
 	int prune = 0;
-	int retval = 0;
 
-	while ((c = getopt(argc, argv, ":p")) != -1) {
+	int c;
+	while ((c = getopt(argc, argv, "p")) != -1) {
 		switch (c) {
 		case 'p':
 			prune = 1;
 			break;
+
 		default:
 			return 1;
 		}
 	}
 
-	if (optind >= argc)
+	if (optind >= argc) {
 		return 1;
+	}
 
-	while (optind < argc) {
+	int retval = 0;
+	do {
 		if (prune) {
 			char *working = argv[optind];
 			while (strcmp(working, ".") && strcmp(working, "/")) {
-				retval = rmdir(working);
+				if (rmdir(working) != 0) {
+					fprintf(stderr, "rmdir: %s: %s\n",
+						working, strerror(errno));
+					retval = 1;
+					break;
+				}
 				working = dirname(working);
 			}
-		} else {
-			retval = rmdir(argv[optind]);
+
+		} else if (rmdir(argv[optind]) != 0) {
+			fprintf(stderr, "rmdir: %s: %s\n", argv[optind],
+				strerror(errno));
+			retval = 1;
 		}
-		optind++;
-	}
+	} while (++optind < argc);
 
 	return retval;
 }
