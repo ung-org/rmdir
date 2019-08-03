@@ -32,20 +32,16 @@
 
 static int rm_dir(char *path, int prune)
 {
-	if (prune) {
-		char *working = path;
-		while (strcmp(working, ".") && strcmp(working, "/")) {
-			if (rmdir(working) != 0) {
-				fprintf(stderr, "rmdir: %s: %s\n",
-					working, strerror(errno));
-				return 1;
-			}
-			working = dirname(working);
-		}
-
-	} else if (rmdir(path) != 0) {
+	if (rmdir(path) != 0) {
 		fprintf(stderr, "rmdir: %s: %s\n", path, strerror(errno));
 		return 1;
+	}
+
+	if (prune) {
+		char *parent = dirname(path);
+		if (strcmp(parent, ".") && strcmp(parent, "/")) {
+			return rm_dir(parent, prune);
+		}
 	}
 
 	return 0;
