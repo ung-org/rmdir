@@ -25,15 +25,38 @@
 #define _XOPEN_SOURCE 500
 #include <errno.h>
 #include <libgen.h>
+#include <locale.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
+static int rm_dir(char *path, int prune)
+{
+	if (prune) {
+		char *working = path;
+		while (strcmp(working, ".") && strcmp(working, "/")) {
+			if (rmdir(working) != 0) {
+				fprintf(stderr, "rmdir: %s: %s\n",
+					working, strerror(errno));
+				return 1;
+			}
+			working = dirname(working);
+		}
+
+	} else if (rmdir(path) != 0) {
+		fprintf(stderr, "rmdir: %s: %s\n", path, strerror(errno));
+		return 1;
+	}
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
-	int prune = 0;
+	setlocale(LC_ALL, "");
 
 	int c;
+	int prune = 0;
 	while ((c = getopt(argc, argv, "p")) != -1) {
 		switch (c) {
 		case 'p':
@@ -49,26 +72,10 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	int retval = 0;
+	int ret = 0;
 	do {
-		if (prune) {
-			char *working = argv[optind];
-			while (strcmp(working, ".") && strcmp(working, "/")) {
-				if (rmdir(working) != 0) {
-					fprintf(stderr, "rmdir: %s: %s\n",
-						working, strerror(errno));
-					retval = 1;
-					break;
-				}
-				working = dirname(working);
-			}
-
-		} else if (rmdir(argv[optind]) != 0) {
-			fprintf(stderr, "rmdir: %s: %s\n", argv[optind],
-				strerror(errno));
-			retval = 1;
-		}
+		ret |= rm_dir(argv[optind], prune);
 	} while (++optind < argc);
 
-	return retval;
+	return ret;
 }
