@@ -23,40 +23,39 @@
 #include <string.h>
 
 const char *rmdir_desc = "remove directories";
-const char *rmdir_inv  = "rmdir [-p] dir...";
+const char *rmdir_inv = "rmdir [-p] dir...";
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
-  int c;
-  int prune = 0;
-  int retval = 0;
+	int c;
+	int prune = 0;
+	int retval = 0;
 
-  while ((c = getopt (argc, argv, ":p")) != -1) {
-    switch (c) {
-      case 'p':
-      prune = 1;
-      break;
-    default:
-      return 1;
-    }
-  }
+	while ((c = getopt(argc, argv, ":p")) != -1) {
+		switch (c) {
+		case 'p':
+			prune = 1;
+			break;
+		default:
+			return 1;
+		}
+	}
 
-  if (optind >= argc)
-    return 1;
+	if (optind >= argc)
+		return 1;
 
-  while (optind < argc) {
-    if (prune) {
-      char *working = argv[optind];
-      while (strcmp(working, ".") && strcmp (working, "/")) {
-        retval = rmdir (working);
-        working = dirname (working);
-      }
-    } else {
-      retval = rmdir (argv[optind]);
-    }
-    optind++;
-  }
+	while (optind < argc) {
+		if (prune) {
+			char *working = argv[optind];
+			while (strcmp(working, ".") && strcmp(working, "/")) {
+				retval = rmdir(working);
+				working = dirname(working);
+			}
+		} else {
+			retval = rmdir(argv[optind]);
+		}
+		optind++;
+	}
 
-  return retval;
+	return retval;
 }
